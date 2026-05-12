@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Résultat — {{ package_name }} | Attack Surface Mapper</title>
+  <meta name="description" content="Résultat d'analyse de surface d'attaque Android pour {{ package_name }}. Score: {{ score }}/100, Niveau: {{ level }}." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="/static/mermaid.min.js"></script>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="result-nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">⚔️ Attack Surface Mapper</a>
+    <a href="/" class="btn btn-secondary btn-sm">← Nouvelle analyse</a>
+  </div>
+</nav>
+
+<!-- ── HERO RESULT ── -->
+<header class="result-hero">
+  <div class="container">
+    <div class="result-meta">
+      <span class="apk-label">{{ '🧪 Mode Démo' if mode == 'sample' else '📦 APK' }}</span>
+      <span class="apk-name">{{ apk_name }}</span>
+    </div>
+    <h1 class="result-title">{{ package_name }}</h1>
+
+    <div class="score-block">
+      <div class="score-circle score-{{ level | lower }}">
+        <span class="score-number">{{ score }}</span>
+        <span class="score-max">/100</span>
+      </div>
+      <div class="score-info">
+        <div class="level-badge level-{{ level | lower }}">{{ level }}</div>
+        <div class="score-label">Surface Risk Score</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ── STATS ── -->
+<section class="container stats-row">
+  <div class="stat-card">
+    <div class="stat-num">{{ stats.activities }}</div>
+    <div class="stat-label">Activities</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ stats.services }}</div>
+    <div class="stat-label">Services</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ stats.receivers }}</div>
+    <div class="stat-label">Receivers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ stats.providers }}</div>
+    <div class="stat-label">Providers</div>
+  </div>
+  <div class="stat-card stat-highlight">
+    <div class="stat-num">{{ stats.exported }}</div>
+    <div class="stat-label">Exportés</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ stats.permissions }}</div>
+    <div class="stat-label">Permissions</div>
+  </div>
+  <div class="stat-card stat-danger">
+    <div class="stat-num">{{ stats.findings }}</div>
+    <div class="stat-label">Findings</div>
+  </div>
+</section>
+
+<main class="container result-main">
+
+  <!-- ── CONFIGURATION GLOBALE ── -->
+  <section class="result-section">
+    <h2 class="section-title">⚙️ Configuration Globale</h2>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr><th>Attribut</th><th>Valeur</th><th>Statut</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>android:allowBackup</code></td>
+            <td><code>{{ app_flags.allowBackup or 'non défini' }}</code></td>
+            <td>
+              {% if app_flags.allowBackup == 'false' %}
+                <span class="tag tag-ok">✅ Sécurisé</span>
+              {% else %}
+                <span class="tag tag-high">⚠️ Risqué</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td><code>android:debuggable</code></td>
+            <td><code>{{ app_flags.debuggable or 'non défini' }}</code></td>
+            <td>
+              {% if app_flags.debuggable == 'true' %}
+                <span class="tag tag-critical">🔴 CRITIQUE</span>
+              {% else %}
+                <span class="tag tag-ok">✅ OK</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td><code>android:usesCleartextTraffic</code></td>
+            <td><code>{{ app_flags.usesCleartextTraffic or 'non défini' }}</code></td>
+            <td>
+              {% if app_flags.usesCleartextTraffic == 'true' %}
+                <span class="tag tag-high">⚠️ Risqué</span>
+              {% else %}
+                <span class="tag tag-ok">✅ OK</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td><code>android:networkSecurityConfig</code></td>
+            <td><code>{{ app_flags.networkSecurityConfig or 'non défini' }}</code></td>
+            <td>
+              {% if app_flags.networkSecurityConfig %}
+                <span class="tag tag-ok">✅ Défini</span>
+              {% else %}
+                <span class="tag tag-medium">⚡ Absent</span>
+              {% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── COMPOSANTS ── -->
+  <section class="result-section">
+    <h2 class="section-title">🧩 Composants Android</h2>
+    <div class="table-wrapper">
+      <table class="data-table components-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Nom</th>
+            <th>Exported</th>
+            <th>Permission</th>
+            <th>Intent-Filter</th>
+            <th>Deep Links</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for comp in components %}
+          <tr class="{{ 'row-exported' if comp.is_exported else '' }}">
+            <td><span class="comp-type comp-{{ comp.type | lower | replace('-','_') | replace('broadcastreceiver','receiver') }}">{{ comp.type }}</span></td>
+            <td class="comp-name mono">{{ comp.name.split('.')[-1] }}<br/><small class="muted">{{ comp.name }}</small></td>
+            <td>
+              {% if comp.exported == 'true' %}
+                <span class="tag tag-critical">🔴 true</span>
+              {% elif 'implicit' in comp.exported %}
+                <span class="tag tag-high">🟠 implicit</span>
+              {% else %}
+                <span class="tag tag-ok">✅ false</span>
+              {% endif %}
+            </td>
+            <td class="mono">
+              {% if comp.permission %}
+                <span class="tag tag-medium">🔒 {{ comp.permission.split('.')[-1] }}</span>
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if comp.has_intent_filter %}
+                <span class="tag tag-info">
+                  {% for ifilter in comp.intent_filters %}
+                    {% for action in ifilter.actions %}
+                      <div class="action-item">{{ action.replace('android.intent.action.', '') }}</div>
+                    {% endfor %}
+                  {% endfor %}
+                </span>
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if comp.deep_links %}
+                {% for dl in comp.deep_links %}
+                  <div class="deep-link-item">🔗 {{ dl.url }}</div>
+                {% endfor %}
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── PERMISSIONS ── -->
+  <section class="result-section">
+    <h2 class="section-title">🔑 Permissions Déclarées</h2>
+    {% if permissions %}
+    <div class="permissions-grid">
+      {% for perm in permissions %}
+      <div class="perm-chip {% if perm in ['android.permission.READ_EXTERNAL_STORAGE','android.permission.WRITE_EXTERNAL_STORAGE','android.permission.MANAGE_EXTERNAL_STORAGE','android.permission.READ_CONTACTS','android.permission.WRITE_CONTACTS','android.permission.ACCESS_FINE_LOCATION','android.permission.ACCESS_COARSE_LOCATION','android.permission.CAMERA','android.permission.RECORD_AUDIO','android.permission.READ_SMS','android.permission.SEND_SMS','android.permission.RECEIVE_SMS','android.permission.READ_PHONE_STATE','android.permission.CALL_PHONE','android.permission.INTERNET'] %}perm-sensitive{% endif %}">
+        {{ perm.replace('android.permission.', '') }}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">Aucune permission déclarée.</p>
+    {% endif %}
+  </section>
+
+  <!-- ── FINDINGS ── -->
+  <section class="result-section">
+    <h2 class="section-title">🚨 Risques Détectés</h2>
+    {% if findings %}
+    <div class="findings-summary">
+      <span class="badge-critical-sm">🔴 {{ stats.critical }} Critical</span>
+      <span class="badge-high-sm">🟠 {{ stats.high }} High</span>
+      <span class="badge-medium-sm">🟡 {{ stats.medium }} Medium</span>
+      <span class="badge-low-sm">🟢 {{ stats.low }} Low</span>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table findings-table">
+        <thead>
+          <tr>
+            <th>Sévérité</th>
+            <th>Risque</th>
+            <th>Composant</th>
+            <th>Pourquoi c'est risqué</th>
+            <th>Correction recommandée</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in findings | sort(attribute='points', reverse=True) %}
+          <tr>
+            <td><span class="sev-badge sev-{{ f.severity | lower }}">{{ f.severity }}</span></td>
+            <td><strong>{{ f.title }}</strong></td>
+            <td class="mono muted">{{ f.component.split('.')[-1] if '.' in f.component else f.component }}</td>
+            <td>{{ f.reason }}</td>
+            <td class="fix-col">{{ f.recommendation }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert alert-success">✅ Aucun risque détecté — Bonne configuration !</div>
+    {% endif %}
+  </section>
+
+  <!-- ── GRAPHE MERMAID ── -->
+  <section class="result-section">
+    <h2 class="section-title">🗺️ Graphe de Surface d'Attaque</h2>
+    <div class="mermaid-container">
+      <div class="mermaid">
+{{ mermaid }}
+      </div>
+    </div>
+
+    <details class="mermaid-source">
+      <summary>Afficher le code Mermaid</summary>
+      <pre class="code-block"><code>{{ mermaid }}</code></pre>
+    </details>
+  </section>
+
+  <!-- ── RECOMMANDATIONS GÉNÉRALES ── -->
+  <section class="result-section">
+    <h2 class="section-title">📋 Recommandations Générales</h2>
+    <div class="reco-grid">
+
+      <div class="reco-card">
+        <div class="reco-icon">🔒</div>
+        <h4>Principe du moindre privilège</h4>
+        <p>Chaque composant doit déclarer <code>android:exported="false"</code> sauf s'il doit être accessible par d'autres applications. Protégez les composants publics avec des permissions custom.</p>
+      </div>
+
+      <div class="reco-card">
+        <div class="reco-icon">🛡️</div>
+        <h4>Network Security Config</h4>
+        <p>Créez un fichier <code>res/xml/network_security_config.xml</code> et référencez-le dans le Manifest pour contrôler finement les connexions réseau autorisées.</p>
+      </div>
+
+      <div class="reco-card">
+        <div class="reco-icon">💾</div>
+        <h4>Protection des données</h4>
+        <p>Désactivez le backup ADB (<code>allowBackup="false"</code>), chiffrez les données locales sensibles et utilisez le Keystore Android pour les clés cryptographiques.</p>
+      </div>
+
+      <div class="reco-card">
+        <div class="reco-icon">🔗</div>
+        <h4>Deep Links &amp; Intent Security</h4>
+        <p>Validez rigoureusement tous les paramètres reçus via des intents ou des deep links. Ne faites jamais confiance aux données provenant de sources externes.</p>
+      </div>
+
+      <div class="reco-card">
+        <div class="reco-icon">🧪</div>
+        <h4>Tests de sécurité</h4>
+        <p>Utilisez des outils comme <strong>MobSF</strong>, <strong>Drozer</strong> ou <strong>Frida</strong> pour tester dynamiquement votre application contre les vulnérabilités détectées.</p>
+      </div>
+
+      <div class="reco-card">
+        <div class="reco-icon">📦</div>
+        <h4>Build de production</h4>
+        <p>Assurez-vous que <code>android:debuggable</code> est absent ou à <code>"false"</code> dans le build de production. Activez R8/ProGuard pour l'obfuscation du code.</p>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p>Attack Surface Mapper &mdash; Résultat pour <strong>{{ package_name }}</strong> &mdash; Score: <strong>{{ score }}/100</strong> ({{ level }})</p>
+    <a href="/" class="btn btn-secondary btn-sm" style="margin-top:0.5rem">← Analyser un autre APK</a>
+  </div>
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#1a1a2e',
+      primaryTextColor: '#e0e0e0',
+      primaryBorderColor: '#4ecca3',
+      lineColor: '#4ecca3',
+      secondaryColor: '#16213e',
+      tertiaryColor: '#0f3460',
+      background: '#ffffff',
+      mainBkg: '#f8f9ff',
+      nodeBorder: '#4ecca3',
+      clusterBkg: '#f0f4ff',
+      titleColor: '#1a1a2e',
+      edgeLabelBackground: '#f0f4ff',
+      fontSize: '14px'
+    },
+    flowchart: { curve: 'basis', htmlLabels: true }
+  });
+</script>
+</body>
+</html>

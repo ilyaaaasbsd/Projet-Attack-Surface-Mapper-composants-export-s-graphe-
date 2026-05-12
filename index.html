@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attack Surface Mapper — Scanner APK Android</title>
+  <meta name="description" content="Analysez la surface d'attaque Android depuis un APK. Détection des composants exportés, permissions sensibles, risques et graphe Mermaid." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="container hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Android Security Analysis
+    </div>
+    <h1 class="hero-title">
+      <span class="gradient-text">Attack Surface</span><br/>Mapper
+    </h1>
+    <p class="hero-subtitle">
+      Cartographiez la surface d'attaque Android à partir d'un APK.<br/>
+      Composants exportés · Permissions · Risques · Graphe de dépendances.
+    </p>
+
+    <!-- Statut apktool -->
+    <div class="apktool-status {% if apktool_ok %}status-ok{% else %}status-warn{% endif %}">
+      {% if apktool_ok %}
+        <span class="status-icon">✅</span>
+        <span><strong>apktool détecté</strong> — Analyse APK réelle disponible</span>
+      {% else %}
+        <span class="status-icon">⚠️</span>
+        <span><strong>apktool non détecté</strong> — Mode démo disponible via le Manifest vulnérable</span>
+      {% endif %}
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">
+      <span>🚨</span> {{ error }}
+    </div>
+    {% endif %}
+  </div>
+</header>
+
+<!-- ── UPLOAD CARD ── -->
+<main class="container main-content">
+
+  <div class="upload-card">
+    <form id="scanForm" action="/scan" method="POST" enctype="multipart/form-data">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="apkFile" name="apk_file" accept=".apk" hidden />
+        <div class="upload-icon">📦</div>
+        <div class="upload-text">
+          <strong>Glissez votre APK ici</strong><br/>
+          <span class="upload-sub">ou cliquez pour sélectionner un fichier .apk</span>
+        </div>
+        <div id="fileInfo" class="file-info hidden"></div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="selectBtn" class="btn btn-secondary">
+          📂 Choisir un fichier APK
+        </button>
+        <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
+          <span class="btn-icon">🔍</span> Scanner l'APK
+        </button>
+      </div>
+    </form>
+
+    <div class="divider"><span>ou</span></div>
+
+    <a href="/sample" class="btn btn-demo">
+      🧪 Tester avec un Manifest vulnérable exemple
+    </a>
+    <p class="demo-hint">Démonstration instantanée — aucun APK requis</p>
+  </div>
+
+  <!-- ── FEATURES ── -->
+  <section class="features-section">
+    <h2 class="section-title">Comment ça fonctionne</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <h3>Extraction APK</h3>
+        <p>L'APK est décompilé automatiquement via <code>apktool</code>. Le fichier <code>AndroidManifest.xml</code> est extrait et parsé.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Détection des Risques</h3>
+        <p>Analyse des composants exportés (Activities, Services, Receivers, Providers), des permissions sensibles et des patterns dangereux.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Score de Risque</h3>
+        <p>Un <strong>Surface Risk Score</strong> entre 0 et 100 est calculé. Niveau : <span class="badge-low">LOW</span> <span class="badge-medium">MEDIUM</span> <span class="badge-high">HIGH</span> <span class="badge-critical">CRITICAL</span>.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗺️</div>
+        <h3>Graphe Mermaid</h3>
+        <p>Un graphe de dépendances interactif est généré automatiquement : APK → Manifest → Composants → Risques → Score.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WHAT IS ANALYZED ── -->
+  <section class="info-section">
+    <h2 class="section-title">Ce qui est analysé</h2>
+    <div class="info-grid">
+      <div class="info-block">
+        <h4>🧩 Composants Android</h4>
+        <ul>
+          <li>Activities &amp; Activity-Alias</li>
+          <li>Services</li>
+          <li>Broadcast Receivers</li>
+          <li>Content Providers</li>
+        </ul>
+      </div>
+      <div class="info-block">
+        <h4>🔑 Permissions &amp; Flags</h4>
+        <ul>
+          <li>Permissions déclarées</li>
+          <li>android:allowBackup</li>
+          <li>android:debuggable</li>
+          <li>android:usesCleartextTraffic</li>
+        </ul>
+      </div>
+      <div class="info-block">
+        <h4>🚨 Patterns Risqués</h4>
+        <ul>
+          <li>Composant exporté sans permission</li>
+          <li>FileProvider mal configuré</li>
+          <li>Deep links exposés</li>
+          <li>Backup / Debuggable activés</li>
+        </ul>
+      </div>
+      <div class="info-block">
+        <h4>📋 Recommandations</h4>
+        <ul>
+          <li>Pourquoi c'est risqué</li>
+          <li>Que corriger</li>
+          <li>Comment corriger</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p>Attack Surface Mapper &mdash; Outil d'analyse de sécurité Android</p>
+  </div>
+</footer>
+
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p>Analyse en cours…</p>
+    <p class="loading-sub">Décompilation APK + parsing Manifest</p>
+  </div>
+</div>
+
+<script>
+  const uploadZone = document.getElementById('uploadZone');
+  const apkFile    = document.getElementById('apkFile');
+  const fileInfo   = document.getElementById('fileInfo');
+  const submitBtn  = document.getElementById('submitBtn');
+  const selectBtn  = document.getElementById('selectBtn');
+  const scanForm   = document.getElementById('scanForm');
+  const overlay    = document.getElementById('loadingOverlay');
+
+  selectBtn.addEventListener('click', () => apkFile.click());
+  uploadZone.addEventListener('click', () => apkFile.click());
+
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.apk')) {
+      apkFile.files = e.dataTransfer.files;
+      showFile(file);
+    }
+  });
+
+  apkFile.addEventListener('change', () => {
+    if (apkFile.files.length) showFile(apkFile.files[0]);
+  });
+
+  function showFile(file) {
+    const size = (file.size / 1024 / 1024).toFixed(2);
+    fileInfo.textContent = `✅ ${file.name} — ${size} MB`;
+    fileInfo.classList.remove('hidden');
+    submitBtn.disabled = false;
+    uploadZone.classList.add('file-selected');
+  }
+
+  scanForm.addEventListener('submit', () => {
+    overlay.classList.remove('hidden');
+  });
+</script>
+</body>
+</html>

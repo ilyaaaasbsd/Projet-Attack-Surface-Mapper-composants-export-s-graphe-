@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AndroidManifest vulnérable - Fichier d'exemple pour Attack Surface Mapper
+  Ce fichier contient intentionnellement de nombreuses vulnérabilités de configuration Android.
+  NE PAS utiliser comme référence de bonne pratique.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.vulnerable.app"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <!-- Permissions sensibles utilisées -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <application
+        android:allowBackup="true"
+        android:debuggable="true"
+        android:usesCleartextTraffic="true"
+        android:label="VulnerableApp"
+        android:icon="@mipmap/ic_launcher">
+
+        <!-- MainActivity exportée explicitement sans permission -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- AdminActivity exportée avec deep link et sans aucune permission -->
+        <activity
+            android:name=".AdminActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Deep link HTTP -->
+                <data android:scheme="http" android:host="admin.example.com" android:path="/panel" />
+                <!-- Deep link HTTPS -->
+                <data android:scheme="https" android:host="admin.example.com" android:path="/panel" />
+                <!-- Deep link custom scheme -->
+                <data android:scheme="vulnapp" android:host="admin" android:path="/open" />
+            </intent-filter>
+        </activity>
+
+        <!-- WebActivity exportée avec deep link générique -->
+        <activity
+            android:name=".WebActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="*.example.com" />
+            </intent-filter>
+        </activity>
+
+        <!-- LoginActivity avec intent-filter implicite (pas d'android:exported déclaré) -->
+        <activity android:name=".LoginActivity">
+            <intent-filter>
+                <action android:name="com.example.vulnerable.LOGIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- SettingsActivity privée (correctement configurée pour comparaison) -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+
+        <!-- SyncService exporté sans permission -->
+        <service
+            android:name=".SyncService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SYNC" />
+            </intent-filter>
+        </service>
+
+        <!-- BackgroundService non exporté (correctement configuré) -->
+        <service
+            android:name=".BackgroundService"
+            android:exported="false" />
+
+        <!-- BootReceiver exporté sans permission - se déclenche au démarrage -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- SmsReceiver exporté sans permission -->
+        <receiver
+            android:name=".SmsReceiver"
+            android:exported="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- ContentProvider exporté sans aucune permission -->
+        <provider
+            android:name=".DataProvider"
+            android:authorities="com.example.vulnerable.app.provider"
+            android:exported="true" />
+
+        <!-- FileProvider mal configuré : grantUriPermissions absent/false -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.vulnerable.app.fileprovider"
+            android:exported="true"
+            android:grantUriPermissions="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    </application>
+
+</manifest>
