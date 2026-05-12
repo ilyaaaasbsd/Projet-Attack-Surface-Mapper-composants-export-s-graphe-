@@ -1,32 +1,32 @@
-# ⚔️ Attack Surface Mapper
+#  Attack Surface Mapper
 
 **Outil d'analyse de la surface d'attaque Android** — Scanne un APK ou un `AndroidManifest.xml` et génère un rapport complet : composants exportés, permissions sensibles, risques détectés, score de risque et graphe de dépendances Mermaid.
 
 ---
 
-## 🎯 Objectif
+##  Objectif
 
 Permettre à un analyste ou étudiant en sécurité mobile de cartographier rapidement la surface d'attaque d'une application Android à partir de son APK, sans outillage complexe.
 
 ---
 
-## ✨ Fonctionnalités
+##  Fonctionnalités
 
 | Fonctionnalité | Description |
 |---|---|
-| 📦 Upload APK | Interface web drag & drop pour uploader un fichier `.apk` |
-| ⚙️ Décompilation automatique | Utilisation d'`apktool` pour extraire le `AndroidManifest.xml` |
-| 🧩 Analyse des composants | Activities, Services, Receivers, ContentProviders |
-| 🔑 Permissions sensibles | Détection des permissions dangereuses déclarées |
-| 🚨 Détection de risques | 10+ patterns de vulnérabilités Android |
-| 📊 Surface Risk Score | Score 0-100 avec niveau LOW/MEDIUM/HIGH/CRITICAL |
-| 🗺️ Graphe Mermaid | Graphe de dépendances APK → Manifest → Composants → Risques |
-| 📋 Recommandations | Explication et correction pour chaque risque détecté |
-| 🧪 Mode démo | Test immédiat avec un Manifest vulnérable exemple |
+|  Upload APK | Interface web drag & drop pour uploader un fichier `.apk` |
+|  Décompilation automatique | Utilisation d'`apktool` pour extraire le `AndroidManifest.xml` |
+|  Analyse des composants | Activities, Services, Receivers, ContentProviders |
+|  Permissions sensibles | Détection des permissions dangereuses déclarées |
+|  Détection de risques | 10+ patterns de vulnérabilités Android |
+|  Surface Risk Score | Score 0-100 avec niveau LOW/MEDIUM/HIGH/CRITICAL |
+|  Graphe Mermaid | Graphe de dépendances APK → Manifest → Composants → Risques |
+|  Recommandations | Explication et correction pour chaque risque détecté |
+|  Mode démo | Test immédiat avec un Manifest vulnérable exemple |
 
 ---
 
-## 🚀 Installation
+##  Installation
 
 ### 1. Prérequis Python
 
@@ -62,7 +62,7 @@ L'application fonctionne en **mode démo** avec le Manifest vulnérable exemple,
 
 ---
 
-## ▶️ Démarrage
+##  Démarrage
 
 ```powershell
 # Se placer dans le dossier du projet
@@ -79,7 +79,7 @@ Ouvrir dans le navigateur : **http://127.0.0.1:5000**
 
 ---
 
-## 🧪 Test sans APK (Mode Démo)
+##  Test sans APK (Mode Démo)
 
 Accéder directement à : **http://127.0.0.1:5000/sample**
 
@@ -97,7 +97,7 @@ Cela analyse le fichier `samples/AndroidManifest_vulnerable.xml` qui contient in
 
 ---
 
-## 🔍 Risques Détectés
+##  Risques Détectés
 
 | Pattern | Sévérité | Points |
 |---|---|---|
@@ -114,7 +114,7 @@ Cela analyse le fichier `samples/AndroidManifest_vulnerable.xml` qui contient in
 
 ---
 
-## 📁 Structure du projet
+##  Structure du projet
 
 ```
 attack_surface_mapper_web/
@@ -134,7 +134,7 @@ attack_surface_mapper_web/
 
 ---
 
-## 🎓 Démonstration devant le professeur
+##  Démonstration devant le professeur
 
 1. **Lancer l'application** : `python app.py`
 2. **Ouvrir** : http://127.0.0.1:5000
@@ -149,7 +149,7 @@ attack_surface_mapper_web/
 
 ---
 
-## 🛠️ Technologies
+##  Technologies
 
 - **Backend** : Python 3.x + Flask
 - **Frontend** : HTML5 + CSS3 + JavaScript vanilla
@@ -159,6 +159,6 @@ attack_surface_mapper_web/
 
 ---
 
-## ⚠️ Avertissement
+##  Avertissement
 
 Cet outil est destiné à un usage éducatif et à l'analyse de sécurité de vos propres applications. N'analysez que des APK dont vous êtes le propriétaire ou pour lesquels vous avez une autorisation explicite.
